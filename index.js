@@ -29,7 +29,7 @@ app.get("/", (req, res) => {
 app.post("/bot", (req, res, next) => {
   const twiml = new MessagingResponse();
   const q = req.body.Body;
-  twiml.message(`Tu mensaje FUE: ${q} `);
+  twiml.message(processInput(q));
 
   res.set("Content-Type", "text/xml");
 
@@ -52,3 +52,11 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => console.log(`App Listening on port ${PORT}`));
+
+const processInput = (input) => {
+  if (input.includes("Hola")) {
+    return "Probando un mensaje multilinea: \n *1. Segunda linea en Bold*\n 2. Tercera Linea \n\n\n Abajito el Emoji 😏";
+  } else {
+    return `Tu mensaje FUE: ${input} `;
+  }
+};

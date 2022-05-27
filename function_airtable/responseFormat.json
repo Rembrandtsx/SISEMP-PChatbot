@@ -1,0 +1,42 @@
+{
+    "detectIntentResponseId": "52e8fdd0-478f-4838-a5c1-151934c230c7",
+    "intentInfo": {
+        "lastMatchedIntent": "projects/app-residia/locations/us-central1/agents/94a84199-d729-4790-8b32-48adf6881e21/intents/41337b99-cf6b-4829-a820-14281f9de0df",
+        "parameters": {
+            "email": {
+                "originalValue": "testeando@testin.com",
+                "resolvedValue": "testeando@testin.com"
+            }
+        },
+        "displayName": "email",
+        "confidence": 1
+    },
+    "pageInfo": {
+        "currentPage": "projects/app-residia/locations/us-central1/agents/94a84199-d729-4790-8b32-48adf6881e21/flows/00000000-0000-0000-0000-000000000000/pages/01577b12-0307-4c38-babb-37fe0d7e8713",
+        "formInfo": {},
+        "displayName": "EmailConfirmacion"
+    },
+    "sessionInfo": {
+        "session": "projects/app-residia/locations/us-central1/agents/94a84199-d729-4790-8b32-48adf6881e21/sessions/9a2ccf-453-9f7-95e-3ccd31c91",
+        "parameters": {
+            "conjunto": {
+                "city": "Sarasota",
+                "original": "Zarazota"
+            },
+            "conjuntosize": 20,
+            "email": "testeando@testin.com",
+            "fecha": "2022-06-03T17:00:00.000Z",
+            "interes": "Informacion unificada",
+            "nombre": {
+                "name": "Camilo",
+                "original": "Camilo"
+            },
+            "rol": "Administrador"
+        }
+    },
+    "fulfillmentInfo": {
+        "tag": "final"
+    },
+    "text": "testeando@testin.com",
+    "languageCode": "es"
+}
