@@ -1,62 +1,98 @@
-const express = require("express");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const twilio = require("twilio");
-const morgan = require("morgan");
 
-dotenv.config();
-const { SID: accountSid, AUTH_TOKEN: TwilloAuthToken } = process.env;
 
-twilio(accountSid, TwilloAuthToken);
-const { MessagingResponse } = twilio.twiml;
-const app = express();
+const {SessionsClient} = require('@google-cloud/dialogflow-cx');
 
-const { PORT = 3000 } = process.env;
 
-app.use(cors());
-app.use(morgan());
+const projectId = 'app-residia';
+const location = 'us-central1';
+const agentId = '94a84199-d729-4790-8b32-48adf6881e21';
+const languageCode = 'es'
+process.env.GOOGLE_APPLICATION_CREDENTIALS =
+        Runtime.getAssets()["/dialogflow.json"].path;
+//https://dialogflowservice-8458.twil.io/dialogflow.json
+/**
+ * Example for regional endpoint:
+ *   const location = 'us-central1'
+ *   const client = new SessionsClient({apiEndpoint: 'us-central1-dialogflow.googleapis.com'})
+ */
+const client = new SessionsClient({apiEndpoint: 'us-central1-dialogflow.googleapis.com'});
 
-app.use(
-  express.urlencoded({
-    extended: false,
-  })
-);
+exports.handler = async function (context, event, callback) {
+  let twiml = new Twilio.twiml.MessagingResponse();
 
-app.use(express.json());
-app.get("/", (req, res) => {
-  res.send("Hola");
-});
-app.post("/bot", (req, res, next) => {
-  const twiml = new MessagingResponse();
-  const q = req.body.Body;
-  twiml.message(processInput(q));
+  const receivedMsg = event.Body;
+  const userNumber = event.From;
 
-  res.set("Content-Type", "text/xml");
+  if (!receivedMsg) return callback("No message received", twiml);
 
-  return res.status(200).send(twiml.toString());
-});
 
-// catch 404 and forward to error handler
-app.use((req, res, next) => {
-  const err = new Error("Not Found");
-  err.status = 404;
-  next(err);
-});
+  const sessionPath = client.projectLocationAgentSessionPath(
+    projectId,
+    location,
+    agentId,
+    userNumber
+  );
+  console.info(sessionPath);
 
-app.use((err, req, res, next) => {
-  res.status(err.status || 500).json({
-    errors: {
-      message: err.message,
+  const request = {
+    session: sessionPath,
+    queryInput: {
+      text: {
+        text: receivedMsg,
+      },
+      languageCode,
     },
-  });
-});
+  };
+  const [response] = await client.detectIntent(request);
 
-app.listen(PORT, () => console.log(`App Listening on port ${PORT}`));
 
-const processInput = (input) => {
-  if (input.includes("Hola")) {
-    return "Probando un mensaje multilinea: \n *1. Segunda linea en Bold*\n 2. Tercera Linea \n\n\n Abajito el Emoji 😏";
-  } else {
-    return `Tu mensaje FUE: ${input} `;
+  // Get response from Dialogflow
+  //let diallofglowJsonFilePath = Runtime.getAssets()["/dialogflow.json"].path;
+  
+  //const dialogflogSessionClient = new dialogflow.SessionsClient({
+  //  keyFilename: diallofglowJsonFilePath,
+  //});
+  //const dialogflowProjectId = process.env.DIALOGFLOW_PROJECT_ID;
+  //const dialogflowSessionPath = dialogflogSessionClient.sessionPath(
+    //dialogflowProjectId,
+    //userNumber
+  //);
+  //const dialogflowRequestParams = {
+   // session: dialogflowSessionPath,
+    //queryInput: {
+      //text: {
+        //text: receivedMsg,
+        //languageCode: "pt-BR",
+      //},
+   // },
+  //};
+  //const dialogflowRequest = await dialogflogSessionClient.detectIntent(
+    //dialogflowRequestParams
+  //);
+  const dialogflowResponses =
+    response.queryResult.responseMessages;
+
+  // Iterate over every message
+  for (const response of dialogflowResponses) {
+    // Texts
+    if (response.text) {
+      const text = response.text.text[0];
+      twiml.message(text);
+    }
+
+    // Payloads
+    if (response.payload) {
+      const fields = response.payload.fields;
+      const payloadMessage = await twiml.message();
+      if (fields.mediaUrl) {
+        const mediaUrl = fields.mediaUrl.stringValue;
+        payloadMessage.media(mediaUrl);
+      }
+      if (fields.text) {
+        const text = fields.text.stringValue;
+        payloadMessage.body(text);
+      }
+    }
   }
+  return callback(null, twiml);
 };
